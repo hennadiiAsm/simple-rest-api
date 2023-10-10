@@ -3,7 +3,7 @@ package com.example.simple_rest_api;
 
 import com.example.simple_rest_api.controllers.UserController;
 import com.example.simple_rest_api.model.User;
-import com.example.simple_rest_api.repositories.RepositorySim;
+import com.example.simple_rest_api.repositories.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,18 +13,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.annotation.SecurityTestExecutionListeners;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 @WebMvcTest(controllers = UserController.class)
+@SecurityTestExecutionListeners
 @TestPropertySource(locations = "classpath:application.properties")
 class ClearSolutionsApplicationTest {
 
@@ -35,7 +38,7 @@ class ClearSolutionsApplicationTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private RepositorySim repo;
+    private UserRepository repo;
 
     private static final String VALID_EMAIL = "a@a";
     private static final String VALID_FIRST_NAME = "A";
@@ -93,6 +96,7 @@ class ClearSolutionsApplicationTest {
     }
 
     @Test
+    @WithUserDetails(value = "a", userDetailsServiceBeanName = "userDetailsService")
     void whenPostAndUserIsValid_returnsStatus201AndProperLocation() throws Exception {
         User user = new User(VALID_EMAIL, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_BIRTH_DATE);
         String body = objectMapper.writeValueAsString(user);
@@ -144,7 +148,7 @@ class ClearSolutionsApplicationTest {
         User user = new User(VALID_EMAIL, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_BIRTH_DATE);
         user.setId(1L);
 
-        Mockito.when(repo.findById(1L)).thenReturn(user);
+        Mockito.when(repo.findById(1L)).thenReturn(Optional.of(user));
     }
 
     @Test
@@ -178,12 +182,7 @@ class ClearSolutionsApplicationTest {
     }
 
     @Test
-    void whenDelete(@Autowired RepositorySim repo) throws Exception {
-        User user = new User(VALID_EMAIL, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_BIRTH_DATE);
-        Mockito.when(repo.findByBirthRange(LocalDate.MIN, LocalDate.MAX)).thenReturn(List.of(user));
-
-        assertEquals(1, repo.findByBirthRange(LocalDate.MIN, LocalDate.MAX).size());
-
+    void whenDelete() throws Exception {
         mvc.perform(delete("/users/1"))
                 .andExpect(status().isOk());
 
@@ -237,7 +236,7 @@ class ClearSolutionsApplicationTest {
         mvc.perform(get("/users?from=" + from + "&to=" + to))
                 .andExpect(status().isBadRequest());
 
-        Mockito.verify(repo, Mockito.never()).findByBirthRange(from, to);
+        Mockito.verify(repo, Mockito.never()).findByBirthDateBetween(from, to);
     }
 
     @Test
@@ -248,7 +247,7 @@ class ClearSolutionsApplicationTest {
         User user = new User(VALID_EMAIL, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_BIRTH_DATE);
         user.setId(1L);
 
-        Mockito.when(repo.findByBirthRange(from, to)).thenReturn(List.of(user));
+        Mockito.when(repo.findByBirthDateBetween(from, to)).thenReturn(List.of(user));
 
         String jsonContent = objectMapper.writeValueAsString(List.of(user));
 
@@ -256,6 +255,6 @@ class ClearSolutionsApplicationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json(jsonContent));
 
-        Mockito.verify(repo).findByBirthRange(from, to);
+        Mockito.verify(repo).findByBirthDateBetween(from, to);
     }
 }

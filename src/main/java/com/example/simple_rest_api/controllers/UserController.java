@@ -2,7 +2,7 @@ package com.example.simple_rest_api.controllers;
 
 import com.example.simple_rest_api.exceptions.FieldException;
 import com.example.simple_rest_api.model.User;
-import com.example.simple_rest_api.repositories.RepositorySim;
+import com.example.simple_rest_api.repositories.UserRepository;
 import com.example.simple_rest_api.util.SimpleDTO;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
@@ -23,6 +23,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -35,10 +36,10 @@ public class UserController {
 
     private volatile LocalDate lastValidBirthDate;
 
-    private final RepositorySim repo;
+    private final UserRepository repo;
 
     @Autowired
-    public UserController(RepositorySim repo) {
+    public UserController(UserRepository repo) {
         this.repo = repo;
     }
 
@@ -56,7 +57,7 @@ public class UserController {
         long millisOfDay = LocalTime.now().toNanoOfDay() / 1_000_000L;
         long initialDelay = millisPerDay - millisOfDay; // millis to the end of the current day
 
-        exeService.scheduleAtFixedRate(() -> lastValidBirthDate = lastValidBirthDate.plusDays(1),
+        exeService.scheduleAtFixedRate(() -> lastValidBirthDate = LocalDate.now().minusYears(minAge),
                 initialDelay,
                 millisPerDay,
                 TimeUnit.MILLISECONDS);
@@ -86,10 +87,11 @@ public class UserController {
 
     @PatchMapping("/{id}")
     private ResponseEntity<Void> update(@PathVariable Long id, @RequestBody User user) {
-        User userFromRepository = repo.findById(id);
-        if (userFromRepository == null) {
+        Optional<User> userOptional = repo.findById(id);
+        if (userOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+        User userFromRepository = userOptional.get();
 
         if (user.getEmail() != null) {
             if (user.getEmail().matches(User.EMAIL_PATTERN)) {
@@ -128,8 +130,8 @@ public class UserController {
 
     @PutMapping("/{id}")
     private ResponseEntity<Void> replace(@PathVariable Long id, @Valid @RequestBody User user) {
-        User userFromRepository = repo.findById(id);
-        if (userFromRepository == null) {
+        Optional<User> userOptional = repo.findById(id);
+        if (userOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         checkBirthDate(user.getBirthDate());
@@ -151,7 +153,7 @@ public class UserController {
         if (from.isAfter(to)) {
             return ResponseEntity.badRequest().build();
         } else {
-            return ResponseEntity.ok(repo.findByBirthRange(from, to));
+            return ResponseEntity.ok(repo.findByBirthDateBetween(from, to));
         }
     }
 
