@@ -4,6 +4,7 @@ package com.example.simple_rest_api;
 import com.example.simple_rest_api.controllers.UserController;
 import com.example.simple_rest_api.model.User;
 import com.example.simple_rest_api.repositories.UserRepository;
+import com.example.simple_rest_api.securiry.SecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -13,8 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.annotation.SecurityTestExecutionListeners;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -24,10 +26,11 @@ import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.*;
 
 
-@WebMvcTest(controllers = UserController.class)
-@SecurityTestExecutionListeners
+@WebMvcTest(UserController.class)
+@ContextConfiguration(classes = {UserController.class, SecurityConfig.class})
 @TestPropertySource(locations = "classpath:application.properties")
 class ClearSolutionsApplicationTest {
 
@@ -40,9 +43,10 @@ class ClearSolutionsApplicationTest {
     @MockBean
     private UserRepository repo;
 
-    private static final String VALID_EMAIL = "a@a";
-    private static final String VALID_FIRST_NAME = "A";
-    private static final String VALID_LAST_NAME = "B";
+    private static final String VALID_EMAIL = "user@example.com";
+    private static final String VALID_PASSWORD = "password";
+    private static final String VALID_FIRST_NAME = "Nick";
+    private static final String VALID_LAST_NAME = "Freak";
     private static LocalDate VALID_BIRTH_DATE;
 
     @BeforeAll
@@ -51,8 +55,9 @@ class ClearSolutionsApplicationTest {
     }
 
     @Test
+    @WithMockUser
     void whenPostAndUserEmailIsBlank_returnsStatus400() throws Exception {
-        User user = new User(" ", VALID_FIRST_NAME, VALID_LAST_NAME, VALID_BIRTH_DATE);
+        User user = new User(" ", VALID_PASSWORD, null, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_BIRTH_DATE);
         badPostRequest(user);
         Mockito.verify(repo, Mockito.never()).save(Mockito.any(User.class));
     }
@@ -63,12 +68,13 @@ class ClearSolutionsApplicationTest {
         mvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
+                .andExpect(authenticated())
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void whenPostAndUserEmailIsInvalid_returnsStatus400() throws Exception {
-        User user = new User("a@", VALID_FIRST_NAME, VALID_LAST_NAME, VALID_BIRTH_DATE);
+        User user = new User("a@", VALID_PASSWORD, null, VALID_FIRST_NAME, VALID_LAST_NAME, VALID_BIRTH_DATE);
         badPostRequest(user);
         Mockito.verify(repo, Mockito.never()).save(Mockito.any(User.class));
     }

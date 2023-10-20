@@ -1,15 +1,15 @@
 package com.example.simple_rest_api.model;
 
 
-import com.example.simple_rest_api.securiry.Authority;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Collection;
 
 @Getter
 @Setter
@@ -25,17 +25,19 @@ public class User {
     @GeneratedValue
     private Long id;
 
+    @Column(unique = true)
+    @Email(regexp = EMAIL_PATTERN)
+    private String email;
+
     @NotBlank
     private String password;
-
-    @Column(unique = true)
-    @Email(regexp = EMAIL_PATTERN, message = "Invalid email. Email should match pattern " + User.EMAIL_PATTERN)
-    private String email;
 
     @ElementCollection
     @Enumerated(EnumType.STRING)
     @CollectionTable
-    private List<Authority> authorities;
+    private Collection<GrantedAuthority> authorities;
+
+    private boolean enabled = true;
 
     @NotBlank
     private String firstName;
@@ -52,6 +54,17 @@ public class User {
 
     public User(String email, String firstName, String lastName, LocalDate birthDate) {
         this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.birthDate = birthDate;
+    }
+
+    public User(
+            String email, String password, Collection<GrantedAuthority> authorities,
+            String firstName, String lastName, LocalDate birthDate) {
+        this.email = email;
+        this.password = password;
+        this.authorities = authorities;
         this.firstName = firstName;
         this.lastName = lastName;
         this.birthDate = birthDate;

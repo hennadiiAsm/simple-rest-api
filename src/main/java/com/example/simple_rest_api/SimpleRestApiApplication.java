@@ -23,8 +23,6 @@ public class SimpleRestApiApplication {
     ApplicationRunner applicationRunner(UserRepository repository, PasswordEncoder encoder, ObjectMapper mapper) {
         return args -> {
             User user = new User();
-            user.setAuthorities(List.of(Authority.READ, Authority.WRITE));
-
             System.err.println(mapper.writeValueAsString(user));
         };
     }
