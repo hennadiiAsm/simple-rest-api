@@ -48,6 +48,14 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- Allows to run queries of this type: @Query("select m from Message m where m.to.id = ?#{ principal?.id }") -->
+        <!-- if provided SecurityEvaluationContextExtension bean -->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.security</groupId>-->
+<!--            <artifactId>spring-security-data</artifactId>-->
+<!--        </dependency>-->
+
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

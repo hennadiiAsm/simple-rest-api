@@ -1,15 +1,14 @@
 package com.example.simple_rest_api.model;
 
 
+import com.example.simple_rest_api.securiry.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
 
 import java.time.LocalDate;
-import java.util.Collection;
 
 @Getter
 @Setter
@@ -19,23 +18,21 @@ import java.util.Collection;
 @Table(name = "users")
 public class User {
 
-    public static final String EMAIL_PATTERN = "^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$";
+    private static final String EMAIL_PATTERN = "^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$";
 
     @Id
-    @GeneratedValue
+    @GeneratedValue//(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     @Email(regexp = EMAIL_PATTERN)
     private String email;
 
     @NotBlank
     private String password;
 
-    @ElementCollection
     @Enumerated(EnumType.STRING)
-    @CollectionTable
-    private Collection<GrantedAuthority> authorities;
+    private Role role;
 
     private boolean enabled = true;
 
@@ -52,19 +49,12 @@ public class User {
 
     private String phoneNumber;
 
-    public User(String email, String firstName, String lastName, LocalDate birthDate) {
-        this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.birthDate = birthDate;
-    }
-
     public User(
-            String email, String password, Collection<GrantedAuthority> authorities,
+            String email, String password, Role role,
             String firstName, String lastName, LocalDate birthDate) {
         this.email = email;
         this.password = password;
-        this.authorities = authorities;
+        this.role = role;
         this.firstName = firstName;
         this.lastName = lastName;
         this.birthDate = birthDate;

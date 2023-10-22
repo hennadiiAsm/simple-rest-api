@@ -1,13 +1,16 @@
 package com.example.simple_rest_api.securiry;
 
 import com.example.simple_rest_api.model.User;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 
 public class UserDetailsImpl implements UserDetails {
 
+    @Getter
     private final User user;
 
     public UserDetailsImpl(User user) {
@@ -16,7 +19,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getAuthorities();
+        return List.of(user.getRole());
     }
 
     @Override

@@ -1,0 +1,13 @@
+user:
+  minAge: 18
+
+spring:
+  jpa:
+    show-sql: true
+    open-in-view: true
+
+#logging:
+#  level:
+#    org:
+#      springframework:
+#        security: DEBUG

@@ -3,20 +3,25 @@ package com.example.simple_rest_api.controllers;
 import com.example.simple_rest_api.exceptions.FieldException;
 import com.example.simple_rest_api.model.User;
 import com.example.simple_rest_api.repositories.UserRepository;
+import com.example.simple_rest_api.securiry.Role;
 import com.example.simple_rest_api.util.SimpleDTO;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -28,7 +33,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @RestController
-@RequestMapping(value = "/users", produces = "application/json")
+@RequestMapping(value = "/users")
 public class UserController {
 
     @Value("${user.minAge}")
@@ -63,8 +68,9 @@ public class UserController {
                 TimeUnit.MILLISECONDS);
     }
 
-    @PostMapping
+    @PostMapping(consumes = "application/json")
     private ResponseEntity<Void> createUser(@Valid @RequestBody User user, UriComponentsBuilder ucb) {
+        checkEmail(user.getEmail());
         checkBirthDate(user.getBirthDate());
 
         user.setId(null); // to avoid inconsistency
@@ -77,6 +83,12 @@ public class UserController {
         return ResponseEntity.created(locationOfNewUser).build();
     }
 
+    private void checkEmail(String email) {
+        if (repo.existsByEmail(email)) {
+            throw new FieldException("User with email " + email + " is already registered");
+        }
+    }
+
     private void checkBirthDate(LocalDate birthDate) {
         if (birthDate.isAfter(lastValidBirthDate)) {
             throw new FieldException(
@@ -85,19 +97,27 @@ public class UserController {
         }
     }
 
-    @PatchMapping("/{id}")
-    private ResponseEntity<Void> update(@PathVariable Long id, @RequestBody User user) {
+    @PatchMapping(path = "/{id}", consumes = "application/json")
+    private ResponseEntity<Void> update(@PathVariable Long id, @RequestBody User user, Principal principal) {
         Optional<User> userOptional = repo.findById(id);
         if (userOptional.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        User userFromRepository = userOptional.get();
 
-        if (user.getEmail() != null) {
-            if (user.getEmail().matches(User.EMAIL_PATTERN)) {
-                userFromRepository.setEmail(user.getEmail());
+        User userFromRepository = userOptional.get();
+        User principalUser = repo.findByEmail(principal.getName()).get();
+
+        if (!principalUser.equals(userFromRepository) && !Role.ADMIN.equals(principalUser.getRole())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+
+
+        if (user.getPassword() != null) {
+            if (!user.getPassword().isBlank()) {
+                userFromRepository.setPassword(user.getPassword());
             } else {
-                throw new FieldException("Invalid email. Email should match pattern " + User.EMAIL_PATTERN);
+                throw new FieldException("Password should not be blank");
             }
         }
 
@@ -128,22 +148,10 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{id}")
-    private ResponseEntity<Void> replace(@PathVariable Long id, @Valid @RequestBody User user) {
-        Optional<User> userOptional = repo.findById(id);
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        checkBirthDate(user.getBirthDate());
-
-        user.setId(id); // to avoid inconsistency
-        repo.save(user);
-        return ResponseEntity.ok().build();
-    }
-
     @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/{id}")
     private void delete(@PathVariable Long id) {
+
         repo.deleteById(id);
     }
 
@@ -175,7 +183,7 @@ public class UserController {
                 .body(SimpleDTO.of(errors));
     }
 
-    @ExceptionHandler({FieldException.class})
+    @ExceptionHandler(FieldException.class)
     private ResponseEntity<SimpleDTO> handleCustomExceptions(Exception ex) {
         return ResponseEntity.badRequest()
                 .body(SimpleDTO.of(ex.getMessage()));

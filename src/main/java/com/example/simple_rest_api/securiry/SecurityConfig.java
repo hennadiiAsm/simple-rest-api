@@ -2,33 +2,36 @@ package com.example.simple_rest_api.securiry;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
-    UserDetailsService userDetailsService() {
+    UserDetailsService userDetailsService(PasswordEncoder encoder) {
         var manager = new InMemoryUserDetailsManager();
 
         UserDetails user1 = User.withUsername("a")
-                .password("abc123")
-                .authorities(Authority.WRITE.getAuthority(), Authority.READ.getAuthority())
+                .password(encoder.encode("a"))
+                .roles(Role.ADMIN.name(), Role.BASIC.name())
                 .build();
         manager.createUser(user1);
 
         UserDetails user2 = User.withUsername("b")
-                .password("abc123")
-                .authorities(Authority.WRITE.getAuthority())
+                .password(encoder.encode("b"))
+                .roles(Role.BASIC.name())
                 .build();
         manager.createUser(user2);
 
@@ -40,13 +43,21 @@ public class SecurityConfig {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(Customizer.withDefaults())
+                .passwordManagement(c -> c
+                        .changePasswordPage("/profile/change-password")
+                )
                 .authorizeHttpRequests(c -> c
-                        .anyRequest().permitAll())
+                        .requestMatchers(HttpMethod.POST, "/users").hasRole(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/users").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/users/{id}").hasRole(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.PATCH, "/users/{id}").authenticated()
+                )
                 .build();
     }
 
     @Bean
     PasswordEncoder passwordEncoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder(); // bcrypt is used by default
     }
+
 }
