@@ -1,10 +1,10 @@
-package com.example.simple_rest_api;
+package com.example.simple;
 
 
-import com.example.simple_rest_api.controllers.UserController;
-import com.example.simple_rest_api.model.User;
-import com.example.simple_rest_api.repositories.UserRepository;
-import com.example.simple_rest_api.securiry.SecurityConfig;
+import com.example.simple.controllers.UserController;
+import com.example.simple.model.User;
+import com.example.simple.repositories.UserRepository;
+import com.example.simple.securiry.SecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;

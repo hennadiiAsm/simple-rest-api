@@ -1,4 +1,4 @@
-package com.example.simple_rest_api.securiry;
+package com.example.simple.securiry;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

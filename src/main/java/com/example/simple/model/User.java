@@ -1,7 +1,7 @@
-package com.example.simple_rest_api.model;
+package com.example.simple.model;
 
 
-import com.example.simple_rest_api.securiry.Role;
+import com.example.simple.securiry.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

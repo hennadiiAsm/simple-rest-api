@@ -1,23 +1,20 @@
-package com.example.simple_rest_api.controllers;
+package com.example.simple.controllers;
 
-import com.example.simple_rest_api.exceptions.FieldException;
-import com.example.simple_rest_api.model.User;
-import com.example.simple_rest_api.repositories.UserRepository;
-import com.example.simple_rest_api.securiry.Role;
-import com.example.simple_rest_api.util.SimpleDTO;
+import com.example.simple.exceptions.FieldException;
+import com.example.simple.model.User;
+import com.example.simple.repositories.UserRepository;
+import com.example.simple.securiry.Role;
+import com.example.simple.util.SimpleDTO;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;

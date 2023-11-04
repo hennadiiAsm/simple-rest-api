@@ -1,6 +1,6 @@
-package com.example.simple_rest_api.securiry;
+package com.example.simple.securiry;
 
-import com.example.simple_rest_api.model.User;
+import com.example.simple.model.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

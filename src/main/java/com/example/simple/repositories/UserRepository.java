@@ -1,6 +1,6 @@
-package com.example.simple_rest_api.repositories;
+package com.example.simple.repositories;
 
-import com.example.simple_rest_api.model.User;
+import com.example.simple.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;

@@ -1,4 +1,4 @@
-package com.example.simple_rest_api.util;
+package com.example.simple.util;
 
 public class SimpleDTO {
     private final Object data;

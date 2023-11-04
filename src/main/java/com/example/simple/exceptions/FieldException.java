@@ -1,4 +1,4 @@
-package com.example.simple_rest_api.exceptions;
+package com.example.simple.exceptions;
 
 public class FieldException extends RuntimeException {
 
