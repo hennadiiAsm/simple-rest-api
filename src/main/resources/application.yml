@@ -5,9 +5,23 @@ spring:
   jpa:
     show-sql: true
     open-in-view: true
+  h2:
+    console:
+      enabled: true
 
 #logging:
 #  level:
 #    org:
 #      springframework:
 #        security: DEBUG
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+server:
+  port: 8080
+

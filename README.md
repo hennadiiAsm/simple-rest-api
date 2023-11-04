@@ -1,1 +1,1 @@
-# simple_rest_api
+# simple-rest-api

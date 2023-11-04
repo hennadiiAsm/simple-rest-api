@@ -168,7 +168,7 @@ public class UserController {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     private ResponseEntity<SimpleDTO> handle(MissingServletRequestParameterException ex) {
         return ResponseEntity.badRequest()
-                .body(SimpleDTO.of("Required request parameter " + ex.getParameterName() + " in format yyyy-MM-dd"));
+                .body(SimpleDTO.of(ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -185,6 +185,7 @@ public class UserController {
 
     @ExceptionHandler(FieldException.class)
     private ResponseEntity<SimpleDTO> handleCustomExceptions(Exception ex) {
+//        ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
         return ResponseEntity.badRequest()
                 .body(SimpleDTO.of(ex.getMessage()));
     }

@@ -14,6 +14,8 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 @Configuration
 @EnableWebSecurity
@@ -39,7 +41,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, HandlerMappingIntrospector introspector) throws Exception {
+        var mvcMatcher = new MvcRequestMatcher.Builder(introspector);
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(Customizer.withDefaults())
@@ -47,10 +50,11 @@ public class SecurityConfig {
                         .changePasswordPage("/profile/change-password")
                 )
                 .authorizeHttpRequests(c -> c
-                        .requestMatchers(HttpMethod.POST, "/users").hasRole(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.GET, "/users").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/users/{id}").hasRole(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.PATCH, "/users/{id}").authenticated()
+//                        .requestMatchers(HttpMethod.POST, "/users").hasRole(Role.ADMIN.name())
+                        .requestMatchers(mvcMatcher.pattern(HttpMethod.POST, "/users")).hasRole(Role.ADMIN.name())
+                        .requestMatchers(mvcMatcher.pattern(HttpMethod.GET, "/users")).permitAll()
+                        .requestMatchers(mvcMatcher.pattern(HttpMethod.DELETE, "/users/{id}")).hasRole(Role.ADMIN.name())
+                        .requestMatchers(mvcMatcher.pattern(HttpMethod.PATCH, "/users/{id}")).authenticated()
                 )
                 .build();
     }
